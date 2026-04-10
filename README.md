@@ -1,54 +1,49 @@
-# Genrify 🎵   
+# Genrify 🎵
 Transformer-Based Lyrics Genre Classification
 
 ## Overview
-Genrify is a machine learning system that predicts a song’s genre using only lyrical content.  
-The project investigates how contextual language models can capture genre-specific linguistic patterns across large music datasets without relying on audio features.
 
-The focus of this work is building and evaluating scalable NLP pipelines for multi-class genre prediction using both classical ML and transformer-based approaches.
+Genrify predicts a song's genre from lyrics alone — no audio features. Fine-tuning DistilBERT on 50,000 songs across 10 genres, the model achieves 5x above random chance, outperforming a TF-IDF baseline and matching prior NLP-only benchmarks in the literature.
 
----
-
-## Technical Approach
-
-The system implements parallel modeling pipelines to evaluate performance across different representation methods.
-
-### Baseline Modeling
-- TF-IDF vectorization for high-dimensional lyric representation  
-- Logistic regression classifier for multi-class genre prediction  
-- Baseline performance benchmarking for comparison against deep models  
-
-### Transformer-Based Modeling
-- DistilBERT encoder for contextual lyric embeddings  
-- Fine-tuned classification head for genre prediction  
-- PyTorch-based training and evaluation pipeline  
-- Comparative evaluation against classical ML baseline  
+Genre is fundamentally multi-modal; rhythm, tempo, and instrumentation carry more defining weight than text. This project establishes how far a lyrics-only transformer approach can push that ceiling — and where it breaks down.
 
 ---
 
-## Dataset
-- Spotify songs dataset containing lyrics and genre labels  
-- Balanced subset across major genre classes  
-- Artist-aware train/validation/test split to reduce leakage  
-- Text normalization and tokenization pipeline for NLP training  
+## Approach
+
+- **DistilBERT** (66.5M parameters) fine-tuned for sequence classification on lyrics tokenized up to 512 tokens
+- Custom 3-layer classification head (768→512→256→10) with ReLU activations and dropout regularization
+- Two-phase training: frozen encoder warmup → full end-to-end fine-tuning with AdamW and linear warmup scheduler
+- Benchmarked against a TF-IDF + logistic regression baseline to isolate the contribution of contextual embeddings
+
+---
+
+## Data Pipeline
+
+- Sourced from [550K Spotify Songs](https://www.kaggle.com/datasets/serkantysz/550k-spotify-songs-audio-lyrics-and-genres) — heavily imbalanced in the raw form (197K Rock vs 12K Classical); balanced to 5,000 songs/genre across 10 classes
+- **Artist-aware** train/val/test split to prevent artist-level leakage — songs by the same artist are never split across sets
+- Text normalization, short-lyric filtering, and whitespace cleaning across 34,471 training samples
+
+**Genres:** Blues, Classical, Country, Electronic, Folk, Hip-Hop, Jazz, Pop, R&B, Rock
+
+---
+
+## Findings
+
+- Hip-Hop achieved the strongest per-class performance (precision 0.75, recall 0.81), driven by its distinctive vocabulary — consistent with prior work in lyric-based classification
+- Blues/Rock and Country/Folk were the most commonly confused pairs, reflecting shared lyrical themes rather than model failure
+- Contextual embeddings from DistilBERT meaningfully outperformed bag-of-words representations, confirming that word order and context carry genre signal beyond lexical features alone
+
+---
+
+## Limitations
+
+Lyrics capture thematic and linguistic patterns but miss the audio signals that most strongly define genre. Extending the pipeline with MFCCs or spectrogram features would be the highest-impact next step.
 
 ---
 
 ## Tech Stack
 Python, PyTorch, HuggingFace Transformers, scikit-learn, Pandas, NumPy
-
----
-
-## Repository Structure
-```
-Genrify/
- ├── src/                # training, preprocessing, evaluation modules
- ├── notebooks/          # exploratory analysis and model experiments
- ├── experiments/        # evaluation outputs and comparisons
- ├── requirements.txt
- └── README.md
-```
-
 
 ---
 
